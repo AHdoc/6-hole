@@ -1,0 +1,121 @@
+-rw-rw-rw- 1 ahdoc ahdoc 18904757742 Jul 26 01:15 no-6hole-730-outside-20-no710.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4679122379 Jul 26 02:20 no-6hole-730-outside-20-no710-3600s.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4610822328 Jul 26 03:23 no-6hole-730-outside-20-no710-7200s.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4609021155 Jul 26 08:26 no-6hole-730-outside-20-no710-25200s.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4608712262 Jul 26 16:42 no-6hole-730-outside-20-no710-30000s.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4608341655 Jul 26 19:37 no-6hole-730-outside-20-no710-40000s.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4607689959 Jul 27 07:22 no-6hole-730-outside-20-no710-70000s.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4607475377 Jul 27 16:45 no-6hole-730-outside-20-no710-80000s.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4607309406 Jul 27 22:22 no-6hole-730-outside-20-no710-100ks.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4607286870 Jul 28 14:47 no-6hole-730-outside-20-no710-30h.sat
+-rw-rw-rw- 1 ahdoc ahdoc  4607228125 Jul 28 18:52 no-6hole-730-outside-20-no710-33h.sat
+
+-rw-rw-rw- 1 ahdoc ahdoc   961821386 Aug  4 00:49  no-6hole-710-outside-22-20h.sat
+-rw-rw-rw- 1 ahdoc ahdoc   961908759 Jul 30 19:35  no-6hole-710-outside-22-12h.sat
+-rw-rw-rw- 1 ahdoc ahdoc   962392128 Jul 29 01:22  no-6hole-710-outside-22-3h.sat
+-rw-rw-rw- 1 ahdoc ahdoc   962035112 Jul 29 21:39  no-6hole-710-outside-22-6h.sat
+-rw-rw-rw- 1 ahdoc ahdoc  2026681442 Jul 28 22:21  no-6hole-710-outside-22.sat
+
+
+730 out 12 no 710 coef=8: sat 526.05s
+730 out 14 no 710 coef=8: sat 4604.94
+730 out 16 no 710 coef=8: sat 17558.11s
+
+-rw-rw-rw- 1 ahdoc ahdoc 7016487573 Aug  2 15:58  no-6hole-730-outside-17-no710-secondhs{377}.sat
+-rw-rw-rw- 1 ahdoc ahdoc  417145567 Aug  2 19:00  no-6hole-730-outside-17-no710-secondhs{377}-3h.sat
+-rw-rw-rw- 1 ahdoc ahdoc  414569382 Aug  2 22:09  no-6hole-730-outside-17-no710-secondhs{377}-6h.sat
+-rw-rw-rw- 1 ahdoc ahdoc  413358280 Aug  3 01:11  no-6hole-730-outside-17-no710-secondhs{377}-9h.sat
+
+-rw-rw-rw- 1 ahdoc ahdoc 1903916112 Jul 30 21:04  no-6hole-3477710-obstacle.sat
+-rw-rw-rw- 1 ahdoc ahdoc 2294964581 Jul 30 22:05  no-6hole-3577710-obstacle.sat
+3477710 obstacle: SAT 2267.69s
+3577710 obstacle: UNSAT 41902.62s
+
+33333330 obstacle: SAT 372.92s
+333333330 obstacle: UNSAT 3086.52s
+
+New symmetry breakings:
+  before - 8443 obstacle: UNSAT 687.6735186576843
+         - 7544 obstacle: SAT 5m15.088s = 315.088s
+         - 7571 obstacle: UNSAT 24m30.173s = 1613.173s
+  after  - 8443 obstacle: UNSAT 229.56
+         - 7544 obstacle: SAT 397.95022439956665
+         - 7571 obstacle: UNSAT 359.9629020690918
+
+----------------------------------------------------------
+
+3477710 obstacle:
+-rw-rw-rw- 1 ahdoc ahdoc 1819276622 Aug 11 11:47  no-6hole-3477710-obstacle.sat
+	SAT 1730.00s
+
+3477710 obstacle 1 point extra:
+-rw-rw-rw- 1 ahdoc ahdoc 2193687807 Aug 11 01:50  no-6hole-3477710-obstacle-1points-extra.sat
+	UNSAT 18474.88s
+
+477710 obstacle 3 points extra:
+-rw-rw-rw- 1 ahdoc ahdoc 1819059955 Aug 11 12:26  no-6hole-477710-obstacle-3points-extra.sat
+
+77710 obstacle 7 points extra:
+
+
+----------------------------------------------------------
+n_30_smallest_hulls.txt
+if chk and '8' in s and s.startswith('3') and s.endswith('710'):
+	3865710: UNSAT 2761.48s
+	3856710: UNSAT 3195.47s
+	3847710: UNSAT 1965.56s
+	3586710: UNSAT 1639.30s
+	3487710: UNSAT 520.80s
+	33853710: UNSAT 1627.14s
+	33844710: UNSAT 1752.40s
+
+if chk and '777' in s:
+	877710: UNSAT 1917s
+	777630: UNSAT 3261s
+	777540: UNSAT 2617s
+	7774410
+	677730
+	577740
+	5377710
+	477750
+	4777410
+	4477710: UNSAT 1624.17s [i9]
+	3777510
+	3577710
+	3377730: UNSAT 2599.45s
+
+if chk and s.startswith('333') and (not '8' in s) and (not '7' in s) and (not '6' in s) and (not '5' in s):
+'3334444410' ,'3334443420' ,'3334443330' ,'3334434420' ,'3334434330' ,'3334433430' ,'3334344420' ,'3334344330' ,
+'3334343430' ,'3334343340' ,'33343433310','3334334430' ,'3334334340' ,'33343343310','3334333440' ,'33343334310',
+'33343333410','3333444420' ,'3333444330' ,'3333443430' ,'3333443340' ,'33334433310','3333434430' ,'3333434340' ,
+'33334343310','3333433440' ,'33334334310','33334333410','3333344430' ,'3333344340' ,'33333443310','3333343440' ,
+'33333434310','33333433410','3333334440' ,'33333344310','33333343410','33333334410','33333334320','33333333420'
+
+if chk and len(s)==8 and s.startswith('333'):
+33378510: UNSAT 11698.53
+33377610,33377520,33376620,33376530,33376440,33368610,33367710,
+33367620,33367530,33367440,33366630,33366540,33366450,33365730,33365640,
+33365550,33364740,33364650,33358620,33357630,33357540,33356730,33356640,
+33356550,33355740,33355650,33354750,33348630,33347730,33347640,33347550,
+33346740,33346650,33345750,33338730,33337740,33337650,33336750
+
+----------------------
+2020-09-02 04:50
+	A logical mistake: All UNSAT patterns with obstacles have to be re-tested!
+
+Fixed.
+
+----------------------
+n: 21~30
+unsat_s consists of all patterns of size up to 24.
+
+3:176   4:127   5:77   6:28   7:6   8:0      sum=414
+3:244   4:169   5:89   6:26   7:6   8:1      sum=535
+3:302   4:224   5:99   6:20   7:0   8:0      sum=645
+3:366   4:260   5:90   6:18   7:0   8:0      sum=734
+3:535   4:413   5:300   6:171   7:54   8:41      sum=1514
+3:645   4:535   5:393   6:224   7:79   8:57      sum=1933
+3:734   4:645   5:503   6:280   7:98   8:78      sum=2338
+3:1513   4:734   5:603   6:354   7:125   8:97      sum=3426
+3:1931   4:1512   5:686   6:411   7:148   8:124      sum=4812
+3:2336   4:1931   5:1422   6:451   7:168   8:144      sum=6452

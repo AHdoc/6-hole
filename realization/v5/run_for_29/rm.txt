@@ -1,0 +1,1 @@
+make t3 && ./t3 -n 3000 -w 100000 -t 19 -o tmp.txt -c cache -d 2,3 -k 10 -r 100

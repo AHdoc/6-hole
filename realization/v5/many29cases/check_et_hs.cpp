@@ -1,0 +1,849 @@
+/*
+New shaking method.
+*/
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <ctime>
+#include <random>
+#include <vector>
+#include <set>
+#include <map>
+#include <string>
+#include <memory>
+#include <queue>
+#include <algorithm>
+#include <assert.h>
+#include <omp.h>
+using namespace std;
+
+typedef long long LL;
+#define x first
+#define y second
+typedef pair<LL, LL> Point;
+const int MAXN = 30;
+
+#include <chrono>
+using namespace std::chrono;
+LL gettime() {
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
+LL randint(LL l, LL r) {
+	thread_local mt19937_64 generator(omp_get_thread_num());
+	// thread_local mt19937_64 generator(123);
+	return uniform_int_distribution<LL>(l, r)(generator);
+}
+
+namespace ahdoc{
+	typedef LL LL;
+	#define x first
+	#define y second
+	#define c1 first.first
+	#define c2 first.second
+	#define c3 second
+	#define MP3(a,b,c) make_pair(make_pair(a,b),c)
+	
+	const int MAXN=30;
+	
+	thread_local int n;
+	thread_local Point pt[MAXN];
+	thread_local int Q_head[MAXN],Q_tail[MAXN];
+	thread_local pair<pair<int,int>,int> Q[MAXN][MAXN];
+	thread_local pair<pair<int,int>,int> C[MAXN];
+
+	bool atan2_less(Point p1, Point p2) {
+		// should be the same as atan2(p1.y,p1.x)<atan2(p2.y,p2.x);
+		// not working when any of {p1.x, p1.y, p2.x, p2.y} is 0 !!!
+		//    2 |  1
+		//s: ---o-->
+		//   -2 | -1
+		int s1 = (((p1.y >= 0) << 1) - 1) << (p1.x < 0);
+		int s2 = (((p2.y >= 0) << 1) - 1) << (p2.x < 0);
+		if (s1 != s2)
+			return s1 < s2;
+		return (p1.x * p2.y - p2.x * p1.y) > 0;
+	}
+	
+	bool on_the_left(const Point &a,const Point &b,const Point &c){return (b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y)>0;}
+	bool on_the_line(const Point &a,const Point &b,const Point &c){return (b.x-a.x)*(c.y-a.y)-(c.x-a.x)*(b.y-a.y)==0;}
+	
+	bool proceed(int i,int j){
+		if(on_the_left(pt[i],pt[j],make_pair(0LL,0LL))){
+			while(Q_head[i]!=Q_tail[i] && on_the_left(pt[Q[i][Q_head[i]].c1],pt[i],pt[j])){
+				if(proceed(Q[i][Q_head[i]].c1,j)) return true;
+				auto tmp=Q[i][Q_head[i]];
+				if(tmp.c1>C[i].c1) C[i].c1=tmp.c1;
+				if(tmp.c2>C[i].c2) C[i].c2=tmp.c2;
+				if(tmp.c3>C[i].c3) C[i].c3=tmp.c3;
+				++Q_head[i];
+			}
+			if(C[i].c3!=-1 && on_the_left(pt[C[i].c3],pt[j],make_pair(0LL,0LL))) return true;
+			Q[j][Q_tail[j]++]=MP3(i,C[i].c1,C[i].c2);
+		}
+		return false;
+	}
+	
+	bool solve(){
+		for(int i=0;i<n;i++){
+			Q_head[i]=Q_tail[i]=0;
+			C[i]=MP3(-1,-1,-1);
+		}
+		for(int i=0;i+1<n;i++)
+			if(proceed(i,i+1))
+				return true;
+		return false; 
+	}
+	
+	bool check(const vector<Point> &pt_, const Point &p){
+		n = pt_.size();
+		for (int i = 0; i < n; i++) {
+			pt[i].x = pt_[i].x - p.x;
+			pt[i].y = pt_[i].y - p.y;
+			if (pt[i].x == 0 && pt[i].y == 0)
+				return false;
+		}
+		sort(pt, pt + n, atan2_less);
+		if(n>=2){
+			for(int i=1;i<n;i++)
+				if(pt[i-1].x*pt[i].y==pt[i].x*pt[i-1].y)
+					return false;
+			for(int i=0,j=1;i<n;i++){
+				while(pt[i].x*pt[j].y-pt[j].x*pt[i].y>0) j=(j+1)%n;
+				if(i!=j && pt[i].x*pt[j].y==pt[j].x*pt[i].y)
+					return false;
+			}
+		}
+
+		
+		if (solve()) return false;
+		for (int i = 0; i < n; i++) {
+			pt[i].x = -pt[i].x;
+			pt[i].y = -pt[i].y;
+		}
+		sort(pt, pt + n, atan2_less);
+		if (solve()) return false;
+		return true;
+	}
+
+	bool check_no6hole(vector<Point> pt){ 
+		// Check whether or not the given set of points contains no 6-hole
+		sort(pt.begin(), pt.end());
+		vector<Point> pt2 = {pt[0]};
+		for(int i=1;i<pt.size();i++)
+			if(check(pt2,pt[i]))
+				pt2.push_back(pt[i]);
+			else
+				return false;
+		return true;
+	}
+
+	bool check_no6hole_bruteforce(vector<Point> pt, bool veb=false){ // Check whether or not the given set of points contains no 6-hole
+		int n=pt.size();
+		for(int i=0;i<n;i++)
+			for(int j=0;j<n;j++){
+				set<int> pts={i,j};
+				if(pts.size()!=2) continue;
+				if(pt[i].x==pt[j].x && pt[i].y==pt[j].y){
+					if (veb)std::cerr<<"Two points coincide.\n";
+					return false;
+				}
+			}
+		for(int i=0;i<n;i++)
+			for(int j=0;j<n;j++)
+				for(int k=0;k<n;k++){
+					set<int> pts={i,j,k};
+					if(pts.size()!=3) continue;
+					if(on_the_line(pt[i],pt[j],pt[k])){
+						if (veb)std::cerr<<"Three points which are colinear.\n";
+						return false;
+					}
+				}
+		int a[6];
+		for(a[0]=0;a[0]<n;a[0]++) for(a[1]=0;a[1]<n;a[1]++) for(a[2]=0;a[2]<n;a[2]++) for(a[3]=0;a[3]<n;a[3]++) for(a[4]=0;a[4]<n;a[4]++) for(a[5]=0;a[5]<n;a[5]++){
+			set<int> pts={a[0],a[1],a[2],a[3],a[4],a[5]};
+			if(pts.size()!=6) continue;
+			bool is6hole=true;
+			for(int i=0;i<6;i++){
+				int j=(i+1)%6;
+				for(int k=(j+1)%6;k!=i;k=(k+1)%6)
+					if(!on_the_left(pt[a[i]],pt[a[j]],pt[a[k]])){ is6hole=false; break; }
+				if(!is6hole) break;
+			}
+			for(int k=0;k<n;k++){
+				bool chk=true;
+				for(int i=0;i<6;i++) if(a[i]==k){ chk=false; break; }
+				if(!chk) continue;
+				bool chkout=false;
+				for(int i=0;i<6;i++){
+					int j=(i+1)%6;
+					if(!on_the_left(pt[a[i]],pt[a[j]],pt[k])){ chkout=true; break; }
+				}
+				if(!chkout){ is6hole=false; break; }
+			}
+			if(is6hole){
+				if (veb)std::cerr<<"n="<<n<<"\n";
+				if (veb)for(int k=0;k<n;k++) std::cerr<<"   Point #"<<k+1<<": ("<<pt[k].x<<","<<pt[k].y<<")\n";
+				if (veb)std::cerr<<"A 6-hole:\n";
+				if (veb)for(int i=0;i<6;i++) std::cerr<<"   "<<a[i]<<": ("<<pt[a[i]].x<<","<<pt[a[i]].y<<")\n";
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+string log_beams();
+
+struct Config {
+	LL n = 100, w = 1000, t = 7, b = 0, k = 1, r = 10000;
+	LL cache_interval = 3600, log_interval = 300;
+	string log_filename = "", cache_filename = "", start_filename = "", start_log_filename = "";
+	vector<int> dels = {3,3};
+
+	string to_string() {
+		string ret;
+		ret += "n=" + std::to_string(n) + ", ";
+		ret += "w=" + std::to_string(w) + ", ";
+		ret += "t=" + std::to_string(t) + ", ";
+		ret += "r=" + std::to_string(r) + ", ";
+		ret += "k=" + std::to_string(k) + ", ";
+		ret += "log_filename=" + log_filename + ", ";
+		ret += "cache_filename=" + cache_filename + ", ";
+		ret += "start_filename=" + start_filename + ", ";
+		ret += "start_log_filename=" + start_log_filename + ", ";
+		ret += "b=" + std::to_string(b) + ", ";
+		ret += "dels=";
+		for (int i = 0; i < dels.size(); i++)
+			ret += (i?",":"") + std::to_string(dels[i]);
+		return ret;
+	}
+
+	vector<int> parse_vec(const std::string &s) {
+		vector<int> ret;
+		string tmp;
+		for (int i = 0, j = 0; i <= s.length(); i++) {
+			if (i == s.length() || s[i] == ',') {
+				ret.push_back(stoi(tmp));
+				tmp.clear();
+			} else
+				tmp += s[i];
+		}
+		return ret;
+	}
+
+	void parse(int argc, char *argv[]) {
+		auto peek = [&](int idx) {
+			if (idx < argc)
+				return std::string(argv[idx]);
+			else {
+				std::cerr << "error in augment " << idx << std::endl;
+				print_help();
+				exit(2);
+			}
+		};
+		for (int i = 1; i < argc; i++)
+			if (argv[i][0] == '-') {
+				string cmd = string(argv[i] + 1);
+				if (cmd == "o")
+					log_filename = peek(i + 1);
+				else if (cmd == "c")
+					cache_filename = peek(i + 1);
+				else if (cmd == "l")
+					start_log_filename = peek(i + 1);
+				else if (cmd == "s")
+					start_filename = peek(i + 1);
+				else if (cmd == "b")
+					b = stoll(peek(i + 1));
+				else if (cmd == "k")
+					k = stoll(peek(i + 1));
+				else if (cmd == "n")
+					n = stoll(peek(i + 1));
+				else if (cmd == "t")
+					t = stoll(peek(i + 1));
+				else if (cmd == "t")
+					r = stoll(peek(i + 1));
+				else if (cmd == "w")
+					w = stoll(peek(i + 1));
+				else if (cmd == "d")
+					dels = parse_vec(peek(i + 1));
+				else if (cmd == "i")
+					cache_interval = stoll(peek(i + 1));
+				else if (cmd == "t")
+					log_interval = stoll(peek(i + 1));
+				else if (cmd == "h")
+					print_help();
+			}
+	}
+
+	void print_help() {
+		std::cerr << "usage:" << endl;
+		std::cerr << "./search -c cache_file [-s init_cache] [-d 2,3...]" << endl;
+		std::cerr << "parameter:" << endl;
+		std::cerr << "    -o string: output file [default: log_#.txt]" << endl;
+		std::cerr << "    -c string: cache file, no cache if empty [default: \"\"]" << endl;
+		std::cerr << "    -l string: init log file, no init loading if empty [default: \"\"]" << endl;
+		std::cerr << "    -s string: init cache file, no init loading if empty [default: \"\"]" << endl;
+		std::cerr << "    -n integer: number of beams [default: 3000]" << endl;
+		std::cerr << "    -b integer: number of least loaded pts [default: 1]" << endl;
+		std::cerr << "    -k integer: number of shakes [default: 10]" << endl;
+		std::cerr << "    -t integer: number of threads [default: 7]" << endl;
+		std::cerr << "    -r integer: size of radius coefficient [default: 10000]" << endl;
+		std::cerr << "    -w integer: size of beams [default: 1000]" << endl;
+		std::cerr << "    -d list: number points to delete [default: 3,3]" << endl;
+		std::cerr << "    -i integer: number of seconds between cache [default: 3600]" << endl;
+		std::cerr << "    -l integer: max number of seconds between logs [default: 300]" << endl;
+		std::cerr << "    -h: print help message and quit" << endl;
+		exit(1);
+	}
+} config;
+
+struct Avg {
+	LL total = 0, cnt = 0;
+	void add(LL x) { total += x; cnt++; }
+	double avg() { return (double)total / cnt; }
+};
+
+struct Logger {
+	LL time;
+	LL total_check_count = 0;
+	LL total_fail_add_count = 0;
+	// Avg shake;
+	LL steps = 0;
+
+	ofstream fout;
+	void init() {
+		time = gettime();
+		string filename = config.log_filename;
+		if (filename.empty())
+			filename = "log_" + to_string(time) + ".txt";
+		fout.open(filename, std::fstream::out);
+		std::cerr << "writing log to " << filename << std::endl;
+	}
+	template<typename T>
+	Logger& operator << (const T &t) {
+		fout << t;
+		std::cerr << t;
+		return *this;
+	}
+	typedef Logger& (*LoggerManipulator)(Logger&);
+	Logger& operator<<(LoggerManipulator manip) {
+		return manip(*this);
+	}
+	static Logger& endl(Logger& logger) {
+		std::cerr << std::endl;
+		logger.fout << std::endl;
+		return logger;
+	}
+	void log_pts(const vector<Point> &pt) {
+		fout << pt.size() << ":";
+		for(int i=1;i<=pt.size();i++) 
+			fout<<"("<<pt[i-1].x<<","<<pt[i-1].y<<")";
+		fout<<std::endl;
+	}
+	void tic() {
+		(*this) << "time:" << (gettime() - time);
+		(*this) << " steps:" << steps;
+		// (*this) << " avg_shake:" << shake.avg();
+		(*this) << " check_count: " << total_check_count;
+		(*this) << " fail_add_count: " << total_fail_add_count;
+		(*this) << " @ " << log_beams() << Logger::endl;
+	}
+} logger;
+
+bool check(const vector<Point> &pt, const Point &p){
+	#pragma omp atomic
+	logger.total_check_count++;
+	return ahdoc::check(pt,p);
+}
+
+class Serializer {
+public:
+	std::fstream file;
+public:
+	Serializer() {}
+	Serializer(const std::string &filename) : file(filename, std::ios::out | std::ofstream::binary) {}
+
+	Serializer& operator <<(LL t) {
+		file.write((char *)&t, sizeof(t));
+		return *this;
+	}
+	template<typename T>
+	Serializer& operator <<(std::vector<T> &vec) {
+		(*this) << (LL)vec.size();
+		for (T &t : vec)
+			(*this) << t;
+		return *this;
+	}
+	template<typename T1, typename T2>
+	Serializer& operator <<(std::pair<T1, T2> &t) {
+		return (*this) << t.first << t.second;
+	}
+	template<typename T>
+	Serializer& operator <<(T &t) {
+		return t.Serialize(*this);
+	}
+};
+
+class Deserializer {
+public:
+	std::fstream file;
+public:
+	Deserializer() {}
+	Deserializer(const std::string &filename) : file(filename, std::ios::in | std::ofstream::binary) {}
+	Deserializer& operator >>(LL &t) {
+		file.read((char *)&t, sizeof(t));
+		return *this;
+	}
+	template<typename T>
+	Deserializer& operator >>(std::vector<T> &vec) {
+		LL n;
+		(*this) >> n;
+		vec.resize(n);
+		for (size_t i = 0; i < n; i++)
+			(*this) >> vec[i];
+		return *this;
+	}
+	template<typename T1, typename T2>
+	Deserializer& operator >>(std::pair<T1, T2> &t) {
+		return (*this) >> t.first >> t.second;
+	}
+	template<typename T>
+	Deserializer& operator >>(T &t) {
+		return t.Deserialize(*this);
+	}
+};
+
+template<typename T>
+vector<T> sample(const vector<T> &vec, int n) {
+	vector<int> ids(vec.size());
+	for (int i = 0; i < vec.size(); i++)
+		ids[i] = i;
+	random_shuffle(ids.begin(), ids.end());
+	vector<T> ret(n);
+	for (int i = 0; i < n; i++)
+		ret[i] = vec[ids[i]];
+	return ret;
+}
+
+vector<Point> remove(vector<Point> pt, int D = 3, LL T = 100) {
+	vector<Point> tmp;
+	while (1) {
+		tmp = sample(pt, pt.size() - D);
+		if (ahdoc::check_no6hole(tmp)) {
+			return tmp;
+		}
+	}
+	return vector<Point>();
+}
+
+/* shake */
+
+pair<vector<int>,vector<int>> PolarAngleStructure(vector<Point> pt_,int t){
+	vector<Point> ptsk;
+	int n=pt_.size();
+	for(int i=0;i<n;i++)
+		if(i!=t){
+			if(pt_[i]==pt_[t])
+				return {vector<int>(),vector<int>()};
+			ptsk.push_back(make_pair(pt_[i].x-pt_[t].x , pt_[i].y-pt_[t].y));
+		}
+	--n;
+	vector<int> ret1;
+	for(int i=0;i<n;i++)
+		ret1.push_back(i);
+	sort(ret1.begin(),ret1.end(),[&](int i,int j){return ahdoc::atan2_less(ptsk[i],ptsk[j]);});
+	
+	for(int i=1;i<n;i++)
+		if(ptsk[ret1[i-1]].x*ptsk[ret1[i]].y==ptsk[ret1[i]].x*ptsk[ret1[i-1]].y)
+			return {vector<int>(),vector<int>()};
+	for(int i=0,j=1;i<n;i++){
+		while(ptsk[ret1[i]].x*ptsk[ret1[j]].y-ptsk[ret1[j]].x*ptsk[ret1[i]].y>0) j=(j+1)%n;
+		if(i!=j && ptsk[ret1[i]].x*ptsk[ret1[j]].y==ptsk[ret1[j]].x*ptsk[ret1[i]].y)
+			return {vector<int>(),vector<int>()};
+	}
+	
+	vector<int> ret2;
+	for(int i=0,j=1;i<n;i++){
+		while(ptsk[ret1[i]].x*ptsk[ret1[j]].y-ptsk[ret1[j]].x*ptsk[ret1[i]].y>0) j=(j+1)%n;
+		ret2.push_back(ret1[j]);
+	}
+	
+	int st;
+	for(int i=0;i<n;i++)
+		if(ret1[i]==0)
+			st=i;
+	rotate(ret1.begin(),ret1.begin()+st,ret1.end());
+	rotate(ret2.begin(),ret2.begin()+st,ret2.end());
+	return {ret1,ret2};
+}
+
+vector<Point> shake(vector<Point> pt, LL T = 0) {
+	if(T<0) return pt;
+	static const LL dx[4] = {-1, 0, 0, 1};
+	static const LL dy[4] = {0, -1, 1, 0};
+	vector<Point> tmp(pt.size());
+	for(;T>=0;T--){
+		tmp = pt;
+		int i=randint(0,pt.size()-1);
+		int chosen = randint(0,3);
+		tmp[i].x += dx[chosen];
+		tmp[i].y += dy[chosen];
+		if(PolarAngleStructure(pt,i)!=PolarAngleStructure(tmp,i)) continue;
+		//if (ahdoc::check_no6hole(tmp)) 
+			pt=tmp;
+		//else
+		//	cerr<<"ERROR!\n";
+	}
+	return pt;
+}
+
+vector<Point> expand(vector<Point> pt, LL R = 5000, LL T = 1000) {
+	Point p;
+	while (T--) {
+		p.x = randint(-R, R);
+		p.y = randint(-R, R);
+		if (check(pt, p)) {
+			pt.push_back(p);
+			return pt;
+		}
+		if(pt.size()>=24)
+			if(T%10==0)
+				pt=shake(pt,1);
+	}
+	return vector<Point>();
+}
+vector<Point> expands_xx(vector<Point> pt, LL I = 1) {
+	// repeat expand at most I times
+	vector<Point> tmp;
+	LL init = pt.size();
+	while (I--) {
+		LL R = config.r * pt.size();
+		LL T = (pt.size()<=20) ? (3LL*(LL)pt.size()*(LL)pt.size()) : 1000;
+		tmp = expand(pt, R, T);
+		if (tmp.empty())
+			return vector<Point>();
+		pt = tmp;
+	}
+	return pt;
+}
+
+struct BeamSearch {
+	struct State {
+		vector<Point> pt;
+		Deserializer& Deserialize(Deserializer &ar) {
+			return ar >> pt;
+		}
+		Serializer& Serialize(Serializer &ar) {
+			return ar << pt;
+		}
+	};
+	Serializer& Serialize(Serializer &ar) {
+		return ar << width << largest << largest_pt << Q;
+	}
+	Deserializer& Deserialize(Deserializer &ar) {
+		return ar >> width >> largest >> largest_pt >> Q;
+	}
+	vector<State> Q;
+	LL head, width, largest;
+	vector<Point> largest_pt;
+
+	BeamSearch(LL width = 1000, const vector<Point> &pt = vector<Point>({{0, 0}})) : width(width) {
+		largest = 0;
+		head = 0;
+		Add(State({pt}));
+	}
+
+	vector<Point> pt_;
+	State tmp;
+	bool dfs(int i, int A) {
+		if (A == 0) {
+			vector<Point> pt = expands_xx(tmp.pt, pt_.size() - tmp.pt.size());
+			if (!pt.empty()) {
+				vector<Point> xxx = expands_xx(pt, 1);
+				if (!xxx.empty()) {
+					if (Add(State({xxx}))) return true;
+				}
+				else 
+					Add(State({pt}));
+			}
+		}else{
+			for (int j = i; j < pt_.size(); j++) {
+				if (!check(tmp.pt, pt_[j]))
+					continue;
+				tmp.pt.push_back(pt_[j]);
+				if (dfs(j + 1, A - 1))
+					return true;
+				tmp.pt.pop_back();
+			}
+		}
+		return false;
+	}
+	
+	int flatten_iter;
+	vector<bool> flatten_pointers;
+	void flatten_initialise_pointers(int n,int c){
+		flatten_pointers.resize(n);
+		for(int i=0;i<n;i++) flatten_pointers[i]=(i<c?true:false);
+	}
+	bool flatten_next_pointers(int n,int c){
+		for(int i=n-1,cnt=0;i>=0;i--){
+			if(flatten_pointers[i]) ++cnt;
+			else{
+				if(cnt==c) return false;
+				for(int j=i-1;j>=0;j--)
+					if(flatten_pointers[j]){
+						flatten_pointers[j]=false;
+						for(int k=j+1;k<n;k++)
+							flatten_pointers[k]=(k-j<=cnt+1?true:false);
+						return true;
+					}
+			}
+		}
+		return false;
+	}
+	
+	bool Add(const State &stat) {
+		// return true if stat.pt.size() > largest
+		if (!stat.pt.empty()) {
+			//if (stat.pt.size() >= 25) {
+			//	#pragma omp critical
+			//	if(!ahdoc::check_no6hole(stat.pt)) cerr<<"Find pt of size "<<stat.pt.size()<<"; check_no6hole failed!\n";
+			//}
+			
+			if (largest < stat.pt.size()) {
+				largest = stat.pt.size();
+				largest_pt = stat.pt;
+				Q.clear();
+				Q.push_back(stat);
+				sort(Q[0].pt.begin(),Q[0].pt.end());
+				head = 0;
+				flatten_iter=0; flatten_initialise_pointers(Q[0].pt.size(),config.dels[flatten_iter]);
+								
+				if (stat.pt.size() >= 25) {
+					#pragma omp critical
+					logger.log_pts(stat.pt);
+				}
+				if (stat.pt.size() >= 30)
+				#pragma omp critical
+				{
+					logger << "Found point sets with " << stat.pt.size() << " points!!! checking..." << Logger::endl;
+					if (!ahdoc::check_no6hole_bruteforce(stat.pt, true)) {
+						std::cerr << "Error!" << endl;
+						exit(1);
+					}
+					else {
+						std::cerr << "Success!" << endl;
+						exit(0);
+					}
+				}
+				return true;
+			}
+			else if (largest == stat.pt.size()) {
+				if (Q.size() < width) {
+					Q.push_back(stat);
+				}
+				else {
+					Q[randint(0, Q.size() - 1)] = stat;
+					#pragma omp atomic
+					logger.total_fail_add_count++;
+				}
+			}
+		}
+		return false;
+	}
+
+	int pop() {
+		int ret = head++;
+		if (head == Q.size())
+			head = 0;
+		return ret;
+	}
+
+	void step() {
+		if (largest < 21) {
+			const vector<Point> &tmp = expands_xx(vector<Point>({ {0,0} }), 21);
+			Add(State({tmp}));
+		} else if (flatten_iter<config.dels.size()) {
+			pt_ = Q[0].pt;
+			tmp.pt.clear();
+			for(int i=0;i<pt_.size();i++){
+				if(!flatten_pointers[i])
+					tmp.pt.push_back(pt_[i]);
+			}
+			if(ahdoc::check_no6hole(tmp.pt)){
+				vector<Point> pt = expands_xx(tmp.pt,config.dels[flatten_iter]);
+				if (!pt.empty()) {
+					vector<Point> xxx = expands_xx(pt, 1);
+					if (!xxx.empty()){
+						Add(State({xxx}));
+						return; // Exit the step() 
+					}else
+						Add(State({pt}));
+				}
+			}
+			if(!flatten_next_pointers(Q[0].pt.size(),config.dels[flatten_iter])){
+				++flatten_iter;
+				if(flatten_iter<config.dels.size()) flatten_initialise_pointers(Q[0].pt.size(),config.dels[flatten_iter]);
+			}
+		}
+		else {
+			int sid = pop();
+			//Q[sid].pt = shake(Q[sid].pt, config.k);
+			//vector<Point> xxx = expands_xx(Q[sid].pt, 1);
+			//if (!xxx.empty())
+			//	Add(State({xxx}));
+			//else {
+				LL del_iters = config.dels.size();
+				for (int iter = 0; iter < del_iters; iter++) {
+					int c = config.dels[iter];
+					vector<Point> tmp = expands_xx(remove(Q[sid].pt, c), c);
+					if (!tmp.empty()) {
+						vector<Point> xxx = expands_xx(tmp);
+						if (!xxx.empty())
+							Add(State({ xxx }));
+						else
+							Q[sid].pt = tmp;
+						break;
+					}
+				}
+			//}
+		}
+	}
+	void run() {
+		while (1)
+			step();
+	}
+};
+
+vector<BeamSearch> ps;
+string log_beams() {
+	vector<LL> cnt;
+	for (int i = 0; i < ps.size(); i++) {
+		if (ps[i].largest >= cnt.size())
+			cnt.resize(ps[i].largest + 1, 0);
+		cnt[ps[i].largest]++;
+	}
+	string ret = "";
+	for (int i = 0; i < cnt.size(); i++)
+		if (cnt[i] > 0) {
+			if (ret != "")
+				ret += " ";
+			ret += to_string(i) + ":" + to_string(cnt[i]);
+		}
+	return ret;
+}
+
+vector<int> findHS(vector<Point> pt){
+	vector<int> ret;
+	vector<Point> tmp;
+	while(pt.size()>=4){
+		vector<bool> b;
+		b.resize(pt.size(),false);
+		int u=0;
+		for(int i=0;i<pt.size();i++)
+			for(int j=0;j<pt.size();j++){
+				if(i==j) continue;
+				bool ck=true;
+				for(int k=0;k<pt.size();k++){
+					if(i==k || j==k) continue;
+					if((pt[j].x-pt[i].x)*(pt[k].y-pt[i].y)-(pt[j].y-pt[i].y)*(pt[k].x-pt[i].x)<0){
+						ck=false;
+						break;
+					}
+				}
+				if(ck){
+					b[i]=true;
+					b[j]=true;
+					++u;
+				}
+			}
+		ret.push_back(u);
+		tmp.clear();
+		for(int i=0;i<pt.size();i++)
+			if(!b[i])
+				tmp.push_back(pt[i]);
+		pt=tmp;
+	}
+	if(pt.size()>0) ret.push_back(pt.size());
+	return ret;
+}
+
+int cnt,errcnt;
+map<vector<int>,int> HS;
+
+void dfs_check(vector<Point> ptall,int i,vector<Point> pt){
+	if(ptall.size()-i+pt.size()<25) return;
+	if(i==ptall.size()){
+		if(ahdoc::check_no6hole(pt))
+			HS[findHS(pt)]++;
+		return;
+	}
+	dfs_check(ptall,i+1,pt);
+	pt.push_back(ptall[i]);
+	dfs_check(ptall,i+1,pt);
+}
+
+int main(int argc, char *argv[]) {
+	cnt=0;
+	errcnt=0;
+	HS.clear();
+	
+	config.start_log_filename="tmp.txt";
+	//config.start_log_filename="tmp_with_2114_cases_of_size_26.txt";
+	if (config.start_log_filename != "") {
+		logger << "start loading from " << config.start_log_filename << Logger::endl;
+		ifstream fin(config.start_log_filename);
+		string line;
+		while (getline(fin, line)) {
+			if (line.length() < 3) continue;
+			if (line[2] == ':' && isdigit(line[0]) && isdigit(line[1])) {
+				istringstream ssin(line);
+				int n; 
+				LL x, y;
+				char c;
+				ssin >> n >> c;
+				vector<Point> pt;
+				for (int i = 0; i < n; i++) {
+					ssin >> c >> x >> c >> y >> c;
+					pt.push_back({x, y});
+				}
+				cnt++;
+				if(!ahdoc::check_no6hole(pt)){
+					errcnt++;
+					cerr<<"ERROR for a case with "<<pt.size()<<" points.\n";
+				}else{
+					HS[findHS(pt)]++;
+				}
+				dfs_check(pt,0,{}); // check all subsets of pt of size >=25
+				if(cnt%100==0)
+					cerr<<"cnt="<<cnt<<"...\n";
+			}
+		}
+		logger << "progress loaded from " << config.start_log_filename << " @ " << log_beams() << Logger::endl;
+	}
+	cerr<<"cnt = "<<cnt<<"; errcnt = "<<errcnt<<"\n";
+	for(int nn=1;nn<=30;nn++){
+		cerr<<"n = "<<nn<<"\n";
+		for(auto it:HS){
+			int n=0;
+			for(int i=0;i<it.first.size();i++)
+				n+=(it.first)[i];
+			if(nn!=n) continue;
+			
+			for(int i=0;i<it.first.size();i++)
+				cerr<<(it.first)[i];
+			cerr<<"0 ";
+			
+			//cerr<<"cnt("<<(it.first)[0];
+			//for(int i=1;i<it.first.size();i++)
+			//	cerr<<","<<(it.first)[i];
+			//cerr<<") = "<<it.second<<"\n";
+		}
+		cerr<<"\n";
+	}
+}

@@ -1,0 +1,2 @@
+Args: C:\Users\Y B Zhang\Points_Without_Empty_6-gon-6hole-\realization\v5\t3.exe 
+Config: n=100, w=1000, t=7, r=10000, k=1, log_filename=, cache_filename=, start_filename=, start_log_filename=, b=0, dels=3,3
