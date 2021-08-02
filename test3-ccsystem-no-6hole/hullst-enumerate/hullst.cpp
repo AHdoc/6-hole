@@ -30,6 +30,7 @@ void dfs(int tot,int n,string s,bool smallest_hulls,bool hulls_with_obstacle,int
 }
 
 int main(){
+	/*
 	freopen("n_26_startswith(4).txt","w",stdout);
 	int st_l=4,st_r=4;
 	cnt=0;
@@ -39,12 +40,13 @@ int main(){
 		dfs(n,n,"",true,false,st_l,st_r);
 	}
 	fclose(stdout);
+	*/
 	
-	//for(int n=1;n<=30;n++){
-	//	freopen(("n_"+to_string(n)+"_smallest_hulls.txt").c_str(),"w",stdout);
-	//	cnt=0;
-	//	dfs(n,n,"",true,false,3,8);
-	//	fclose(stdout);
-	//} 
+	for(int n=1;n<=30;n++){
+		freopen(("n_"+to_string(n)+"_smallest_hulls.txt").c_str(),"w",stdout);
+		cnt=0;
+		dfs(n,n,"",true,false,3,8);
+		fclose(stdout);
+	} 
 }
 
