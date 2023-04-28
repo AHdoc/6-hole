@@ -38,11 +38,8 @@ int nbvar,nbclauses,nbliterals;
 
 /* Variables */
 int idx[MAXN+1][MAXN+1][MAXN+1]; // idx[p][q][r]: The triangle pqr is oriented
-int idx2[MAXN+1][MAXN+1][MAXN+1][MAXN+1]; 
-int idx3[MAXN+1][MAXN+1][MAXN+1];
-int idx4[MAXN+1][MAXN+1][MAXN+1][MAXN+1]; 
-int idx5[MAXN+1][MAXN+1][MAXN+1][MAXN+1];
-int idx6[MAXN+1][MAXN+1][MAXN+1][MAXN+1]; 
+int idx2[MAXN+1][MAXN+1][MAXN+1];
+int idx3[MAXN+1][MAXN+1][MAXN+1][MAXN+1]; 
 
 int lvl[MAXN+1];
 
@@ -79,215 +76,111 @@ void new_known(int i,int j,int k){
 	new_known(idx[i][j][k]);
 }
 
-void cc_system(int n,vector<int> hull){
+void cc_system(int n){
 	for(int i=1;i<=n;i++)
-		for(int j=i+1;j<=n;j++)
-			for(int k=j+1;k<=n;k++){
-				int x=new_var();
-				idx[i][j][k]=idx[j][k][i]=idx[k][i][j]=x;
-				idx[i][k][j]=idx[j][i][k]=idx[k][j][i]=-x;
-			}
-/* known information */
-	for(int i=1,i2,j=0;j<hull.size();i=i2,j++){ 
-		if(j>=1 && hull[j-1]==3 && hull[j]>=2){ // Symmetry Breaking for Triangles
-			int p=i-3,q=i-2,x=i,y=i+1;
-			new_known(p,y,x);
-			new_known(q,x,y);
-		} 
-		if(j>=1 && hull[j-1]==4){ // Symmetry Breaking for Quadrilaterals
-			int p=i-4,q=i-3,r=i-2,s=i-1;
-			new_known(q,s,i);
-			new_known(r,p,i);
-		}
-		if(j>=1 && hull[j-1]==5){ // Symmetry Breaking for Pentagons
-			int p=i-5,q=i-4,r=i-3,s=i-2,t=i-1;
-			int x1=new_var(),x6=new_var(),x11=new_var();
-			new_known(q,s,i);
-			new_known(s,p,i);
-			new_known(r,t,i);
-			new_clauses({idx[q][t][i],idx[p][r][i]}); 
-		} 
-		if(j>=1 && hull[j-1]==6){ // Symmetry Breaking for Hexagons
-			int p=i-6,q=i-5,r=i-4,s=i-3,t=i-2,u=i-1;
-			int x1=new_var(),x6=new_var(),x11=new_var();
-			new_known(q,t,i);
-			new_known(s,p,i);
-		}
-		
-		i2=i+hull[j];
-		vector<int> layerpts;
-		for(int k=i;k<i2;k++){
-			lvl[k]=j;
-			layerpts.push_back(k);
-		}
-		int tot=layerpts.size();
-		if(tot>=3){
-			for(int u=0;u<tot;u++)
-				for(int v=(u+1)%tot;(v+1)%tot!=u;v=(v+1)%tot)
-					for(int w=(v+1)%tot;w!=u;w=(w+1)%tot){
-						int uu=layerpts[u];
-						int vv=layerpts[v];
-						int ww=layerpts[w];
-						new_known(uu,vv,ww);
-					}
-			for(int u=0;u<tot;u++){
-				int v=(u+1)%tot;
-				int p=layerpts[u],q=layerpts[v];
-				for(int r=i2;r<=n;r++)
-					new_known(p,q,r);
-			}
-		}
+	for(int j=i+1;j<=n;j++)
+	for(int k=j+1;k<=n;k++){
+		int x=new_var();
+		idx[i][j][k]=idx[j][k][i]=idx[k][i][j]=x;
+		idx[i][k][j]=idx[j][i][k]=idx[k][j][i]=-x;
 	}
-/* ----------------- */
 	// Interiority: If tqr and ptr and pqt, then pqr.
 	for(int p=1;p<=n;p++)
-		for(int q=p+1;q<=n;q++)
-			for(int r=p+1;r<=n;r++)
-				for(int t=1;t<=n;t++){
-					set<int> pts={p,q,r,t};
-					if(pts.size()!=4) continue;
-					new_clauses({-idx[t][q][r],-idx[p][t][r],-idx[p][q][t],idx[p][q][r]});
-				}
+	for(int q=1;q<=n;q++)
+	for(int r=1;r<=n;r++)
+	for(int t=1;t<=n;t++){
+		set<int> pts={p,q,r,t};
+		if(pts.size()!=4) continue;
+		new_clauses({-idx[t][q][r],-idx[p][t][r],-idx[p][q][t],idx[p][q][r]});
+	}
 	// Transitivity: If tsp and tsq and tsr, and tpq and tqr, then tpr.
 	for(int p=1;p<=n;p++)
-		for(int q=1;q<=n;q++)
-			for(int r=1;r<=n;r++)
-				for(int s=1;s<=n;s++)
-					for(int t=1;t<=n;t++){
-						set<int> pts={p,q,r,s,t};
-						if(pts.size()!=5) continue;
-						new_clauses({-idx[t][s][p],-idx[t][s][q],-idx[t][s][r],-idx[t][p][q],-idx[t][q][r],idx[t][p][r]});
-					}
-// idx5[p][q][r][s]: pq and rs (along the counterclockwise order prqs) intersect
-	for(int p=1;p<=n;p++)
-		for(int q=1;q<=n;q++)
-			for(int r=1;r<=n;r++)
-				for(int s=1;s<=n;s++){
-					set<int> pts={p,q,r,s};
-					if(pts.size()!=4) continue;
-					int x=new_var();
-					idx5[p][q][r][s]=x;
-					define_var_and(x,{idx[p][q][s],idx[q][p][r],idx[r][s][p],idx[s][r][q]});
-				}
-// idx6[p][q][r][s]: pq and the left extension of rs intersect
-	for(int p=1;p<=n;p++)
-		for(int q=1;q<=n;q++)
-			for(int r=1;r<=n;r++)
-				for(int s=1;s<=n;s++){
-					set<int> pts={p,q,r,s};
-					if(pts.size()!=4) continue;
-					int x=new_var();
-					idx6[p][q][r][s]=x;
-					define_var_and(x,{idx[p][r][q],idx[p][s][q],idx[r][s][q],idx[s][r][p]});
-				}
+	for(int q=1;q<=n;q++)
+	for(int r=1;r<=n;r++)
+	for(int s=1;s<=n;s++)
+	for(int t=1;t<=n;t++){
+		set<int> pts={p,q,r,s,t};
+		if(pts.size()!=5) continue;
+		new_clauses({-idx[t][s][p],-idx[t][s][q],-idx[t][s][r],-idx[t][p][q],-idx[t][q][r],idx[t][p][r]});
+	}
 }
 
-int var_triangle_not_intersect_obstable(int n,int p,int q,int r,vector<int> hull){
-	int x=new_var();
-	if(lvl[p]==hull.size()-1 && lvl[q]==hull.size()-1 && lvl[r]==hull.size()-1){
-		new_known(-x);
-		return x;
-	}
-	vector<int> cond;
-	int lt=n-hull[hull.size()-1]+1,rt=n;
-	for(int i1=lt;i1<=rt;i1++){
-		int i2=(i1<rt?i1+1:lt);
-		if((set<int>{p,q,i1,i2}).size()==4) cond.push_back(-idx5[p][q][i1][i2]);
-		if((set<int>{q,r,i1,i2}).size()==4) cond.push_back(-idx5[q][r][i1][i2]);
-		if((set<int>{r,p,i1,i2}).size()==4) cond.push_back(-idx5[r][p][i1][i2]);
-		if((set<int>{p,q,i1,i2}).size()==4) cond.push_back(-idx5[p][q][i2][i1]);
-		if((set<int>{q,r,i1,i2}).size()==4) cond.push_back(-idx5[q][r][i2][i1]);
-		if((set<int>{r,p,i1,i2}).size()==4)cond.push_back(-idx5[r][p][i2][i1]);
-	}
-	define_var_and(x,cond);
-	return x;
-}
-// idx2[p][q][r][s]: s is inside the triangle pqr
-// idx3[p][q][r]   : the triangle pqr has no point inside nor intersection with the obstacle
-void var_pt_inside_triangle(int n,vector<int> hull){
+// idx2[p][q][r]: the triangle pqr has no point inside
+void var_pt_inside_triangle(int n){
 	for(int p=1;p<=n;p++)
-		for(int q=p+1;q<=n;q++)
-			for(int r=p+1;r<=n;r++){
-				vector<int> empty_cond;
-				for(int s=1;s<=n;s++){
-					set<int> pts={p,q,r,s};
-					if(pts.size()!=4) continue;
-					
-					int x=new_var(); // x: s is inside triangle pqr
-					if(lvl[s]<=lvl[p] && lvl[s]<=lvl[q] && lvl[s]<=lvl[r]) new_known(-x);
-					
-					idx2[p][q][r][s]=idx2[q][r][p][s]=idx2[r][p][q][s]=x;
-					define_var_and(x,{idx[p][q][s],idx[q][r][s],idx[r][p][s]});
-					
-					empty_cond.push_back(-x);
-				}
-				int x_not_intersect_obstacle=var_triangle_not_intersect_obstable(n,p,q,r,hull);
-				empty_cond.push_back(x_not_intersect_obstacle);
-				
-				int x_empty=new_var();
-				idx3[p][q][r]=idx3[q][r][p]=idx3[r][p][q]=x_empty;
-				define_var_and(x_empty,empty_cond); 
-			}
+	for(int q=1;q<=n;q++)
+	for(int r=1;r<=n;r++){
+		set<int> pts1={p,q,r};
+		if(pts1.size()!=3) continue;
+
+		vector<int> empty_cond;
+		for(int s=1;s<=n;s++){
+			set<int> pts2={p,q,r,s};
+			if(pts2.size()!=4) continue;
+			
+			int x=new_var(); // x: s is inside triangle pqr
+			define_var_and(x,{idx[p][q][s],idx[q][r][s],idx[r][p][s]});
+			
+			empty_cond.push_back(-x);
+		}
+
+		int x_empty=new_var();
+		idx2[p][q][r]=x_empty;
+		define_var_and(x_empty,empty_cond); 
+	}
 }
 
-int var_4pt_region_not_intersect_obstable(int n,int p,int q,int r,int s,vector<int> hull){
-	int x=new_var();
-	vector<int> cond;
-	int lt=n-hull[hull.size()-1]+1,rt=n;
-	for(int i1=lt;i1<=rt;i1++){
-		int i2=(i1<rt?i1+1:lt);
-		if((set<int>{s,r,i1,i2}).size()==4) cond.push_back(-idx6[i1][i2][s][r]);
-		if((set<int>{p,q,i1,i2}).size()==4) cond.push_back(-idx6[i1][i2][p][q]);
-		if((set<int>{s,r,i1,i2}).size()==4) cond.push_back(-idx6[i2][i1][s][r]);
-		if((set<int>{p,q,i1,i2}).size()==4) cond.push_back(-idx6[i2][i1][p][q]);
-	}
-	define_var_and(x,cond);
-	return x;
-}
-// idx4[p][q][r][s]: A special 4-point region is empty
+// idx3[p][q][r][s]: A special 4-point region is empty
 /*   -------s------r
      xxxxxxx|
 	 xxxxxxx|
 	 xxxxxxx|
 	 -------p------q 
 */ 
-void var_4pt_region_empty(int n,vector<int> hull){
+void var_4pt_region_empty(int n){
 	for(int p=1;p<=n;p++)
-		for(int q=1;q<=n;q++)
-			for(int r=1;r<=n;r++)
-				for(int s=1;s<=n;s++){
-					set<int> pts={p,q,r,s};
-					if(pts.size()!=4) continue;
-					
-					vector<int> empty_cond;
-					for(int t=1;t<=n;t++){
-						if(pts.find(t)!=pts.end()) continue;
-						
-						int x=new_var(); 
-						define_var_and(x,{idx[p][q][t],idx[r][s][t],idx[p][s][t]});
-						empty_cond.push_back(-x);
-					}
-					int y_not_intersect_obstacle=var_4pt_region_not_intersect_obstable(n,p,q,r,s,hull);
-					empty_cond.push_back(y_not_intersect_obstacle);
-					
-					int y=new_var();
-					idx4[p][q][r][s]=y;
-					define_var_and(y,empty_cond);
-				}
+	for(int q=1;q<=n;q++)
+	for(int r=1;r<=n;r++)
+	for(int s=1;s<=n;s++){
+		set<int> pts={p,q,r,s};
+		if(pts.size()!=4) continue;
+
+		vector<int> empty_cond;
+		for(int t=1;t<=n;t++){
+			if(pts.find(t)!=pts.end()) continue;
+
+			int x=new_var(); 
+			define_var_and(x,{idx[p][q][t],idx[r][s][t],idx[p][s][t]});
+			empty_cond.push_back(-x);
+		}
+
+		int y=new_var();
+		idx3[p][q][r][s]=y;
+		define_var_and(y,empty_cond);
+	}
 }
 
-void mk_no6hole_givenhullstructure_obstacle_nosmaller7hull(vector<int> hull){
-	int n=0;
-	for(int x:hull) n+=x;
+/*
+1:   2:   3:   4:   5:   6:   7:   8:
+ +A+  A-+  +-A  +A+  +A+  A-+  +-A  
+ B C  | B  B |  | B  B |  | |  | |   A
+ +D+  +C+  +C+  C-+  +-C  +-B  B-+
+*/
+
+const int num_points[9]={-1,4,3,3,3,3,2,2,1};
+
+void clauses_from_hull(int n,vector<int> hull){
 	
-	nbvar=0;
-	nbclauses=0;
-	nbliterals=0;
-	clauses.clear();
+}
+
+void mk_no6hole_given_recthull(vector<int> hull){
+	int n=4; for(int x:hull) n+=num_points[x]; // Total number of points
+	nbvar=0; nbclauses=0; nbliterals=0; clauses.clear(); // Initialise the SAT problem
 	
-	cc_system(n,hull);
-	var_pt_inside_triangle(n,hull);
-	var_4pt_region_empty(n,hull);
+	cc_system(n);
+	clauses_from_hull(n,hull);
+	var_pt_inside_triangle(n);
+	var_4pt_region_empty(n);
 	
 	// Restriction: No 6-hole.
 	for(int p=1;p<=n;p++)
@@ -297,34 +190,16 @@ void mk_no6hole_givenhullstructure_obstacle_nosmaller7hull(vector<int> hull){
 					set<int> pts={p,q,r,s};
 					if(pts.size()!=4) continue;
 					
-					int empty_r1=idx3[p][q][r],empty_r2=idx3[p][r][s];
-					int left_empty=idx4[p][q][r][s],right_empty=idx4[r][s][p][q];
+					int empty_r1=idx2[p][q][r],empty_r2=idx2[p][r][s];
+					int left_empty=idx3[p][q][r][s],right_empty=idx3[r][s][p][q];
 					new_clauses({-idx[p][q][r],-idx[q][r][s],-idx[r][s][p],-idx[s][p][q],-empty_r1,-empty_r2,left_empty,right_empty});
 				}
-	// Restriction: No smaller 7-hull.
-	for(int p=8;p<=n;p++)
-		for(int q=1;q<=n;q++)
-			for(int r=1;r<=n;r++)
-				for(int s=1;s<=n;s++)
-					for(int t=1;t<=n;t++){
-						set<int> pts={p,q,r,s,t};
-						if(pts.size()!=5) continue;
-						
-						int left_empty=idx4[p][q][s][t],right_empty=idx4[s][t][q][r];
-						new_clauses({
-							-idx[p][q][r], -idx[p][q][s],
-							-idx[q][r][s], -idx[q][r][t],
-							-idx[r][s][t], -idx[r][s][p],
-							-idx[s][t][p], -idx[s][t][q],
-							-idx[t][p][q], -idx[t][p][r],
-							left_empty, right_empty
-						});
-					}
 	
+	// Output SAT problem
 	string s="no-6hole-";
 	for(int x:hull)
 		s.push_back(char('0'+x));
-	s+="-obstacle.sat";
+	s+=".sat";
 	ofstream fout(s);
 	
 	fout<<"c\n";
@@ -340,12 +215,5 @@ void mk_no6hole_givenhullstructure_obstacle_nosmaller7hull(vector<int> hull){
 }
 
 int main(){
-	mk_no6hole_givenhullstructure_obstacle_nosmaller7hull({7,3,0});
-	mk_no6hole_givenhullstructure_obstacle_nosmaller7hull({7,3,1});
-	mk_no6hole_givenhullstructure_obstacle_nosmaller7hull({7,3,2});
-	mk_no6hole_givenhullstructure_obstacle_nosmaller7hull({7,3,3});
-	mk_no6hole_givenhullstructure_obstacle_nosmaller7hull({7,3,4});
-	mk_no6hole_givenhullstructure_obstacle_nosmaller7hull({7,3,5});
-	mk_no6hole_givenhullstructure_obstacle_nosmaller7hull({7,3,6});
-} 
-
+	mk_no6hole_given_recthull({1,1,1,8});
+}
