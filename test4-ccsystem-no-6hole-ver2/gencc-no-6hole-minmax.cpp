@@ -171,6 +171,7 @@ const int num_points[9]={-1,4,3,3,3,3,2,2,1};
 
 void clauses_from_hull(int n,vector<int> hull){
 	int outside_n=2,iA,iB,iC,iD; // 1 : plus x inf; 2 : plus y inf.
+	for(int i=3;i<=n;i++) new_known(idx[1][2][i]);
 	for(int x:hull){
 		if(x==1){
 			iA=outside_n+1, iB=outside_n+2, iC=outside_n+3, iD=outside_n+4;
@@ -239,5 +240,5 @@ void mk_no6hole_given_recthull(vector<int> hull){
 }
 
 int main(){
-	mk_no6hole_given_recthull({1,1,1,8});
+	mk_no6hole_given_recthull({1,1,1,1,1,8});
 }
