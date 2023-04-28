@@ -163,18 +163,42 @@ void var_4pt_region_empty(int n){
 /*
 1:   2:   3:   4:   5:   6:   7:   8:
  +A+  A-+  +-A  +A+  +A+  A-+  +-A  
- B C  | B  B |  | B  B |  | |  | |   A
- +D+  +C+  +C+  C-+  +-C  +-B  B-+
+ B C  | C  B |  | C  B |  | |  | |   A
+ +D+  +D+  +D+  B-+  +-C  +-C  B-+
 */
 
 const int num_points[9]={-1,4,3,3,3,3,2,2,1};
 
 void clauses_from_hull(int n,vector<int> hull){
-	
+	int outside_n=2,iA,iB,iC,iD; // 1 : plus x inf; 2 : plus y inf.
+	for(int x:hull){
+		if(x==1){
+			iA=outside_n+1, iB=outside_n+2, iC=outside_n+3, iD=outside_n+4;
+		}else if(x==2){
+			iA=outside_n+1, iB=outside_n+1, iC=outside_n+2, iD=outside_n+3;
+		}else if(x==3){
+			iA=outside_n+1, iB=outside_n+2, iC=outside_n+1, iD=outside_n+3;
+		}else if(x==4){
+			iA=outside_n+1, iB=outside_n+2, iC=outside_n+3, iD=outside_n+2;			
+		}else if(x==5){
+			iA=outside_n+1, iB=outside_n+2, iC=outside_n+3, iD=outside_n+3;			
+		}else if(x==6){
+			iA=outside_n+1, iB=outside_n+1, iC=outside_n+2, iD=outside_n+2;
+		}else if(x==7){
+			iA=outside_n+1, iB=outside_n+2, iC=outside_n+1, iD=outside_n+2;
+		}else if(x==8){
+			iA=outside_n+1, iB=outside_n+1, iC=outside_n+1, iD=outside_n+1;			
+		}
+		for(int i=outside_n+1;i<=n;i++) if(i!=iA) new_known(idx[1][iA][i]);
+		for(int i=outside_n+1;i<=n;i++) if(i!=iB) new_known(idx[2][iB][i]);
+		for(int i=outside_n+1;i<=n;i++) if(i!=iC) new_known(idx[iC][2][i]);
+		for(int i=outside_n+1;i<=n;i++) if(i!=iD) new_known(idx[iD][1][i]);
+		outside_n+=num_points[x];
+	}
 }
 
 void mk_no6hole_given_recthull(vector<int> hull){
-	int n=4; for(int x:hull) n+=num_points[x]; // Total number of points
+	int n=2; for(int x:hull) n+=num_points[x]; // Total number of points
 	nbvar=0; nbclauses=0; nbliterals=0; clauses.clear(); // Initialise the SAT problem
 	
 	cc_system(n);
