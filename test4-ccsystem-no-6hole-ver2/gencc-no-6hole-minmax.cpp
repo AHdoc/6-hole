@@ -32,7 +32,7 @@ struct VectorHash {
     }
 };
 
-const int MAXN=30;
+const int MAXN=40;
 
 int nbvar,nbclauses,nbliterals;
 
@@ -137,16 +137,16 @@ void var_pt_inside_triangle(int n){
 	 xxxxxxx|
 	 -------p------q 
 */ 
-void var_4pt_region_empty(int n){
-	for(int p=1;p<=n;p++)
-	for(int q=1;q<=n;q++)
-	for(int r=1;r<=n;r++)
-	for(int s=1;s<=n;s++){
+void var_4pt_region_empty(int nl,int nr){
+	for(int p=nl;p<=nr;p++)
+	for(int q=nl;q<=nr;q++)
+	for(int r=nl;r<=nr;r++)
+	for(int s=nl;s<=nr;s++){
 		set<int> pts={p,q,r,s};
 		if(pts.size()!=4) continue;
 
 		vector<int> empty_cond;
-		for(int t=1;t<=n;t++){
+		for(int t=nl;t<=nr;t++){
 			if(pts.find(t)!=pts.end()) continue;
 
 			int x=new_var(); 
@@ -205,10 +205,10 @@ void mk_no6hole_given_recthull(vector<int> hull){
 	cc_system(n);
 	clauses_from_hull(n,hull);
 	var_pt_inside_triangle(n);
-	var_4pt_region_empty(n);
+	var_4pt_region_empty(3, n);
 	
 	// Restriction: No 6-hole.
-	for(int p=1;p<=n;p++)
+	for(int p=3;p<=n;p++)
 		for(int q=p+1;q<=n;q++)
 			for(int r=p+1;r<=n;r++)
 				for(int s=p+1;s<=n;s++){
